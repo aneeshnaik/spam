@@ -3,7 +3,7 @@
 """
 Created: 20th March 2019
 Author: A. P. Naik
-Description: init file of spam.data
+Description: init file of 'data' submodule.
 """
 import os
 import numpy as np

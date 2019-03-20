@@ -18,10 +18,9 @@ h = 0.7
 omega_m = 0.308
 
 
-def v_circ_pipeline(theta, theta_dict, galaxy,
-                    fR_parameter, log10fR0, Rscr_fixed,
-                    halo_type, StellarScreening, EnvScreening, ML_ratio,
-                    MGGridDim, component_split=False):
+def v_model(theta, theta_dict, galaxy, fR_parameter, log10fR0, Rscr_fixed,
+            halo_type, StellarScreening, EnvScreening, ML_ratio,
+            MGGridDim, component_split=False):
     """
     Calculate v_circ for parameter set contained in theta, on SPARC galaxy
     contained in 'galaxy' argument. Fifth force is optionally included by

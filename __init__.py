@@ -3,8 +3,13 @@
 """
 Created: 20th March 2019
 Author: A. P. Naik
-Description: Main file of spam module.
+Description: init file of spam module. File is empty because everything is
+contained with 'data', 'fit' or 'analysis' submodules.
 """
-import numpy as np
 
-fR0_values = -np.logspace(np.log10(1.563e-8), np.log10(2e-6), 20)
+def spam(x):
+    return x**2
+
+if __name__=='__main__':
+    
+    

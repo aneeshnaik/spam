@@ -1,65 +1,23 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 """
-Created: 25th April 2018
+Created: 20th March 2019
 Author: A. P. Naik
-Description: Classes to load SPARC galaxy data. SPARCGalaxy is the object that
-contains all SPARC data for a given galaxy, while SPARCGlobal is the object
-containing all galaxies, each stored as a individual instance of SPARCGalaxy.
+Description: init file of spam.data
 """
+import os
 import numpy as np
-from os import environ
-from os.path import exists
 from scipy.constants import parsec as pc
-import pickle
 kpc = 1e+3*pc
 Mpc = 1e+6*pc
 Msun = 1.989e+30
-
-
-class SPARCGlobal:
-    """
-    Object containing all galaxies. Individual galaxies are contained in
-    `self.galaxies` as instances of the `SPARCGalaxy` class, while their names
-    are in `self.names`.
-
-    So, if one wanted to access the SPARCGalaxy instance corresponding to
-    galaxy NGC5055, one could use:
-
-    >>> sparc = SPARCGlobal()
-    >>> ind = sparc.names.index('NGC5055')
-    >>> gal = sparc.galaxies[ind]
-    """
-    def __init__(self, sample='standard',
-                 datadir=environ['SPARCDIR']+"/SPARCData"):
-
-        assert sample in ['standard', 'full', 'gold']
-        assert exists(datadir)
-
-        # getting list of galaxy names
-        namefile = open(datadir+"/names_"+sample+".txt", 'r')
-        data = namefile.readlines()
-        namefile.close()
-        self.names = []
-        for i in range(len(data)):
-            self.names.append(data[i].split()[0])
-
-        # creating list of SPARCGalaxy instances (loading data for each)
-        self.galaxies = []
-        for name in self.names:
-            self.galaxies.append(SPARCGalaxy(name, sample, datadir))
-
-        # fR0 values
-        self.fR0_values = -np.logspace(np.log10(1.563e-8), np.log10(2e-6), 20)
-
-        return
 
 
 class SPARCGalaxy:
     """
     Object containing all available SPARC data for a single SPARC galaxy.
     """
-    def __init__(self, name, sample, datadir):
+    def __init__(self, name):
 
         self.name = name
 
@@ -205,3 +163,32 @@ class SPARCGalaxy:
         self.ext_potential_upper = col3
 
         return
+
+
+datadir = os.path.dirname(os.path.realpath(__file__))+"/SPARCData"
+
+names_full = []
+names_standard = []
+sample_full = []
+sample_standard = []
+
+
+# getting list of galaxy names
+namefile = open(datadir+"/names_full.txt", 'r')
+data = namefile.readlines()
+namefile.close()
+names_full = []
+for i in range(len(data)):
+    names_full.append(data[i].split()[0])
+namefile = open(datadir+"/names_standard.txt", 'r')
+data = namefile.readlines()
+namefile.close()
+names_standard = []
+for i in range(len(data)):
+    names_standard.append(data[i].split()[0])
+
+# creating list of SPARCGalaxy instances (loading data for each)
+for name in names_full:
+    sample_full.append(SPARCGalaxy(name))
+for name in names_standard:
+    sample_standard.append(SPARCGalaxy(name))

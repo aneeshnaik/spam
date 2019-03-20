@@ -31,6 +31,7 @@ def v_hernquist(r, log10rho, a):
 sparc = SPARCGlobal()
 
 file = open("SPARCData/hernquist_parameters.txt", 'w')
+#file = open("SPARCData/test_parameters.txt", 'w')
 
 # fit all galaxies
 for gal in sparc.galaxies:

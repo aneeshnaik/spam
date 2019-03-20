@@ -9,10 +9,13 @@ import sys
 import time
 import emcee
 import numpy as np
-from v_model import v_model
-from priors import lnprior
+import spam.data
 from scipy.constants import G
 from scipy.constants import parsec as pc
+from v_model import v_model
+from priors import lnprior
+
+# physical constants
 delta = 93.6
 h = 0.7
 H0 = h*100*1000/(1e+6*pc)
@@ -20,134 +23,178 @@ Msun = 1.989e+30
 
 
 class GalaxyFit:
+    """
+    Class which prepares and executes MCMC fits of SPARC galaxies.
 
-    def __init__(self, galaxy, nwalkers=20, ntemps=5, fR=False,
+
+    Parameters
+    ----------
+    galaxy : spam.data.SPARCGalaxy
+        Instance of class spam.data.SPARCGalaxy, containing galaxy to be fit.
+    nwalkers : int
+        Number of MCMC walkers. Default is 30.
+    ntemps : int
+        Number of MCMC temperatures. Default is 4.
+    fR : bool
+        Whether an f(R) gravity 5th force is included. Default is False.
+    halo_type : str, {'NFW', 'DC14'}
+        Whether DM haloes are modelled as NFW or DC14. Default is 'NFW'.
+    upsilon : str, {'single', 'double', 'fixed'}
+        Whether to have a single free parameter for the mass-to-light ratio,
+        two free parameters, or fixed empirical values. Default is 'single'.
+    baryon_bound : bool
+        Whether baryon fraction in galaxies is capped at the cosmic baryon
+        fraction. Default is True.
+    scaling_priors : bool
+        Whether stellar mass / halo mass and concentration / halo mass
+        relations from simulations are used as priors. Otherwise flat priors.
+        Default is True.
+    infer_errors : bool
+        Whether additional error component is added in quadrature to observed
+        error. Additional component is then a free parameter in the fit.
+        Default is True.
+    **fR_parameter : str, {'free', 'fixed'}
+        If fR is True, then whether fR0 is a free parameter, or an imposed
+        value.
+    **log10fR0 : float
+        If fR is True and fR_parameter is 'fixed', then the (log10 of the)
+        value of the imposed fR0. For example, for F6, log10fR0 would be -6.0.
+    **stellar_screening : bool
+        If fR is True, then whether stellar screening is included. If True,
+        then stars are excluded as sources in the scalar field solver. Default
+        is False.
+    **env_screening : bool
+        If fR is True, then whether environmental screening is included. If
+        true, then large scale structure is added to scalar field solver.
+        Default is False.
+    **MG_grid_dim : int, {1, 2}
+        Whether scalar field solver is 1D or 2D. Default is 1D.
+
+    Attributes
+    ----------
+    ndim : int
+        Number of dimensions of parameter space.
+    prior_bounds_lower : numpy.ndarray, shape (ndim,)
+        Lower bounds of priors on all free parameters, in order given by
+        self.theta_dict.
+    prior_bounds_upper : numpy.ndarray, shape (ndim,)
+        Upper bounds of priors on all free parameters, in order given by
+        self.theta_dict.
+    theta_dict : dict
+        Keys are names of free parameters, and values are indices. Indices are
+        used, for example, in the stored Markov chains.
+    time_taken : float
+        Time elapsed so far on MCMC.
+
+    Methods
+    -------
+    __init__ :
+        Initialises an instance of GalaxyFit.
+    initialise_pos :
+        Randomly finds initial positions for the MCMC walkers.
+    iterate :
+        Runs the MCMC.
+
+    """
+    def __init__(self, galaxy, nwalkers=30, ntemps=4, fR=False,
                  halo_type='NFW', upsilon='single', baryon_bound=True,
                  scaling_priors=True, infer_errors=True, **kwargs):
         """
-        fR_parameter, log10fR0=None,
-                 , StellarScreening=False, EnvScreening=False,
-                  MGGridDim=None):
-        """
-        """
-        Initialises an instance of SoloGalFit class, i.e. creates a fit for
-        a galaxy, with options specified.
+        Initialises an instance of GalaxyFit class, see GalaxyFit docstring for
+        more info.
         """
 
+        # storing parameters
         self.galaxy = galaxy
-        #self.name = galaxy.name
+        self.name = galaxy.name
         self.nwalkers = nwalkers
         self.ntemps = ntemps
         self.fR = fR
+        self.halo_type = halo_type
+        if halo_type not in ['NFW', 'DC14']:
+            raise ValueError("Unrecognised halo type!")
+        self.upsilon = upsilon
+        if upsilon not in ['single', 'fixed', 'double']:
+            raise ValueError("Unrecognised mass-to-light ratio prescription!")
+        self.baryon_bound = baryon_bound
+        self.scaling_priors = scaling_priors
+        self.infer_errors = infer_errors
 
-        # check keywords all understood
-        acceptable_kwargs = ['fR_parameter_type', 'log10fR0', 'stellar_screening', 'env_screening', 'MG_grid_dim']
+        # check kwargs all understood
+        acceptable_kwargs = ['fR_parameter', 'log10fR0', 'stellar_screening',
+                             'env_screening', 'MG_grid_dim']
         for k in kwargs.keys():
             if k not in acceptable_kwargs:
                 raise KeyError("Unrecognised key: "+k+" in GalaxyFit")
+
+        # read in required kwargs
         if self.fR:
-            if 'fR_parameter_type' in kwargs.keys():
-                self.fR_parameter_type == kwargs['fR_parameter_type']
-                if self.fR_parameter_type not in ['fixed', 'free']:
+            if 'fR_parameter' in kwargs.keys():
+                self.fR_parameter == kwargs['fR_parameter']
+                if self.fR_parameter not in ['fixed', 'free']:
                     raise ValueError("fR_parameter_type should be"
                                      "'fixed' or 'free'")
-            assert 'stellar_screening' in kwargs.keys()
-            assert 'env_screening' in kwargs.keys()
-            assert 'MG_grid_dim' in kwargs.keys()
+            else:
+                raise KeyError("Need key 'fR_parameter' for f(R) fit")
 
-            if fR_parameter_type == 'fixed':
-                assert 'log10fR0' in kwargs.keys()
-        
+            if self.fR_parameter == 'fixed':
+                if 'log10fR0' in kwargs.keys():
+                    self.log10fR0 = kwargs['log10fR0']
+                    if self.log10fR0 > -5.6 or self.log10fR0 < -9:
+                        raise ValueError("Invalid value for fR0.")
+                else:
+                    raise KeyError("Need 'log10fR0' if fixing fR0")
 
-# =============================================================================
-#         fR_options = ['fR0', 'Rscr', 'fixed', 'Rscr_fixed', None]
-#         assert fR_parameter in fR_options, "unrecognised fR"
-#         if fR_parameter == 'fixed':
-#             assert MGGridDim in ['1D', '2D'], "Need to specify MG solver type"
-#             assert type(log10fR0) == float, "fR0 should be float"
-#             assert log10fR0 >= -9, "fR0 needs to be greater than 1e-9"
-#             assert log10fR0 <= np.log10(2e-6), "fR0 needs to be less than 2e-6"
-#             assert Rscr_fixed is None, "don't fix Rscr if fixing fR0!"
-#         elif fR_parameter == 'fR0':
-#             assert MGGridDim in ['1D', '2D'], "Need to specify MG solver type"
-#             assert log10fR0 is None, "Don't specify fR0 varying it!"
-#             assert Rscr_fixed is None, "don't fix Rscr if varying fR0!"
-#         elif fR_parameter == 'Rscr_fixed':
-#             assert log10fR0 is None, "Don't specify fR0 if fixing Rscr!"
-#             assert MGGridDim is None, "Only specify MGGridDim if fitting fR0"
-#             assert type(Rscr_fixed) in [float, np.float32, np.float64]
-#             assert Rscr_fixed >= 0
-#             assert Rscr_fixed < 1.05*galaxy.R[-1]
-#         else:
-#             assert Rscr_fixed is None, "don't fix Rscr if varying fR0!"
-#             assert log10fR0 is None, "Don't specify fR0 if using varying it!"
-#             assert MGGridDim is None, "Only specify MGGridDim if fitting fR0"
-#         if EnvScreening:
-#             assert fR_parameter in ['fR0', 'fixed']
-#         assert halo_type in ['NFW', 'DC14'], "unrecognised ML"
-#         assert ML_ratio in ['fixed', 'single', 'double'], "unrecognised ML"
-# 
-#         self.galaxy = galaxy
-#         self.fR_parameter = fR_parameter
-#         self.log10fR0 = log10fR0
-#         self.Rscr_fixed = Rscr_fixed
-#         self.halo_type = halo_type
-#         self.StellarScreening = StellarScreening
-#         self.EnvScreening = EnvScreening
-#         self.ML_ratio = ML_ratio
-#         self.CosmicBaryonBound = CosmicBaryonBound
-#         self.scaling_priors = scaling_priors
-#         self.infer_errors = infer_errors
-#         self.MGGridDim = MGGridDim
-#         self.Verbose = Verbose
-# 
-#         self.ntemps = ntemps
-#         self.nwalkers = nwalkers
-#         self.threads = threads
-#         self.IsConverged = False
-# 
-#         # assign number of free parameters ndim, as well as lower and upper
-#         # bounds on priors lb and ub. Start with 2 NFW, then add 0, 1, or 2
-#         # parameter(s) for M/L ratio, then 0 or 1 parameter for fR0/Rscr.
-#         # Prior bounds are same as Katz et al except fR0/Rscr
-#         ndim = 2
-#         lb = np.array([4, 0])
-#         ub = np.array([5.7, 2])
-#         theta_dict = {'V_vir': 0, 'c_vir': 1}
-#         if ML_ratio == 'single':
-#             ndim += 1
-#             lb = np.append(lb, -0.52)
-#             ub = np.append(ub, -0.1)
-#             theta_dict['ML_disc'] = 2
-#             theta_dict['ML_bulge'] = 2
-#         elif ML_ratio == 'double':
-#             ndim += 2
-#             lb = np.append(lb, [-0.52, -0.52])
-#             ub = np.append(ub, [-0.1, -0.1])
-#             theta_dict['ML_disc'] = 2
-#             theta_dict['ML_bulge'] = 3
-#         if fR_parameter == 'fR0':
-#             ndim += 1
-#             lb = np.append(lb, -9)
-#             ub = np.append(ub, np.log10(2e-6))
-#             theta_dict['fR0'] = ndim-1
-#         elif fR_parameter == 'Rscr':
-#             ndim += 1
-#             lb = np.append(lb, 0)
-#             ub = np.append(ub, 1.05*galaxy.R[-1])
-#             theta_dict['Rscr'] = ndim-1
-#         if infer_errors:  # extra parameter for modelled error
-#             ndim += 1
-#             lb = np.append(lb, 0)
-#             ub = np.append(ub, 2*galaxy.v_err.max())
-#             theta_dict['sigma_gal'] = ndim-1
-#         assert lb.shape == ub.shape == (ndim,)
-#         self.ndim = ndim
-#         self.prior_bounds_lower = lb
-#         self.prior_bounds_upper = ub
-#         self.theta_dict = theta_dict
-#         self.time_taken = 0
-# =============================================================================
+            self.stellar_screening = kwargs.get('stellar_screening', False)
+            self.env_screening = kwargs.get('env_screening', False)
+            self.MG_grid_dim = kwargs.get('MG_grid_dim', 1)
+            if self.MG_grid_dim not in [1, 2]:
+                raise ValueError("Require 1 or 2 for MG_grid_dim")
+        else:
+            if len(kwargs.keys()) > 0:
+                raise TypeError("Too many keyword arguments in GalaxyFit!")
+
+        # assign number of free parameters ndim, as well as lower and upper
+        # bounds on priors lb and ub. Start with 2 NFW, then add 0, 1, or 2
+        # parameter(s) for M/L ratio, then 0 or 1 parameter for fR0, finally
+        # sigma_g
+        # Prior bounds are same as Katz et al except fR0 and sigma_g
+        ndim = 2
+        lb = np.array([4, 0])
+        ub = np.array([5.7, 2])
+        theta_dict = {'V_vir': 0, 'c_vir': 1}
+        if self.upsilon == 'single':
+            ndim += 1
+            lb = np.append(lb, -0.52)
+            ub = np.append(ub, -0.1)
+            theta_dict['ML_disc'] = 2
+            theta_dict['ML_bulge'] = 2
+        elif self.upsilon == 'double':
+            ndim += 2
+            lb = np.append(lb, [-0.52, -0.52])
+            ub = np.append(ub, [-0.1, -0.1])
+            theta_dict['ML_disc'] = 2
+            theta_dict['ML_bulge'] = 3
+        if 'fR_parameter' in self.__dict__.keys():
+            if self.fR_parameter == 'free':
+                ndim += 1
+                lb = np.append(lb, -9)
+                ub = np.append(ub, np.log10(2e-6))
+                theta_dict['fR0'] = ndim-1
+        if self.infer_errors:
+            ndim += 1
+            lb = np.append(lb, 0)
+            ub = np.append(ub, 2*galaxy.v_err.max())
+            theta_dict['sigma_gal'] = ndim-1
+        assert lb.shape == ub.shape == (ndim,)
+        self.ndim = ndim
+        self.prior_bounds_lower = lb
+        self.prior_bounds_upper = ub
+        self.theta_dict = theta_dict
+
+        # time elapsed on MCMC so far
+        self.time_taken = 0
+
         return
 
     def initialise_pos(self):
@@ -232,47 +279,6 @@ class GalaxyFit:
             self.lnprob = np.dstack((self.lnprob, sampler.lnprobability))
         return
 
-    def converge(self, niter):
-        """
-        Once convergence has been *independently* verified on the chains, this
-        function saves maxprob parameter values, maxprob fit, and cuts the
-        chain down to niter iterations.
-        """
-        self.IsConverged = True
-
-        # cut chain
-        start = self.niter - niter
-        self.chain_converged = self.chain[:, :, start:, :]
-        flatshape = (self.ntemps, self.nwalkers*niter, self.ndim)
-        self.flatchain_converged = self.chain_converged.reshape(flatshape)
-        self.lnprob_converged = self.lnprob[:, :, start:]
-
-        # find maxprob values
-        ind = np.argmax(self.lnprob_converged[0])
-        theta = self.flatchain_converged[0][ind]
-        v_fit = v_model(theta, self.theta_dict, self.galaxy,
-                        fR_parameter=self.fR_parameter,
-                        log10fR0=self.log10fR0,
-                        Rscr_fixed=self.Rscr_fixed,
-                        halo_type=self.halo_type,
-                        StellarScreening=self.StellarScreening,
-                        EnvScreening=self.EnvScreening,
-                        ML_ratio=self.ML_ratio,
-                        MGGridDim=self.MGGridDim,
-                        component_split=True)
-
-        self.maxprob_theta = theta
-        self.maxprob_v_circ = v_fit[0]
-        self.maxprob_v_gas = v_fit[1]
-        self.maxprob_v_disc = v_fit[2]
-        self.maxprob_v_bulge = v_fit[3]
-        self.maxprob_v_DM = v_fit[4]
-        self.maxprob_v_5 = v_fit[5]
-        if self.infer_errors:
-            sigma_gal = theta[self.theta_dict['sigma_gal']]
-            self.maxprob_v_err = np.sqrt(self.galaxy.v_err**2 + sigma_gal**2)
-
-        return
 
 
 # MCMC log likelihood
@@ -298,5 +304,8 @@ def lnlike(theta, theta_dict, galaxy, fR_parameter, log10fR0, Rscr_fixed,
 
     return lnlike
 
-if __name__=='__main__':
-    g = GalaxyFit(True, fR=True, fR_parameter_type=True, env_screening=True, stellar_screening=True, MG_grid_dim=True)
+
+if __name__ == '__main__':
+
+    gal = spam.data.sample_standard[0]
+    fit = GalaxyFit(gal)

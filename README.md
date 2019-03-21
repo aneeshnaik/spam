@@ -17,7 +17,14 @@ This code was written by **Aneesh Naik** ([Bitbucket](https://bitbucket.org/an48
 * [Debora Sijacki](https://www.ast.cam.ac.uk/people/Debora.Sijacki)
 * [Harry Desmond](https://www2.physics.ox.ac.uk/contacts/people/desmond)
 
+
 ## License
 
-## Acknowledgments
+Copyright (2019) Aneesh Naik and co-authors.
 
+SPAM is free software made available under the MIT license. For details see LICENSE.
+
+If you make use of SPAM in your work, please cite our paper ([arXiv](), [ADS]()).
+
+
+## Acknowledgments

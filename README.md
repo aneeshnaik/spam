@@ -12,7 +12,7 @@ This code was used to generate the results in Naik et al. (2019).
 
 This code was written by **Aneesh Naik** ([Bitbucket](https://bitbucket.org/an485/)). The research was performed in collaboration with the co-authors of Naik et al. (2019):
 
-* Ewald Puchwein
+* Ewald Puchwein ([website](https://www.aip.de/Members/epuchwein))
 * Anne-Christine Davis
 * Debora Sijacki
 * Harry Desmond

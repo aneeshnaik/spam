@@ -3,7 +3,14 @@
 """
 Created: 20th March 2019
 Author: A. P. Naik
-Description: init file of 'fit' submodule.
+Description: 'fit' submodule of spam package. See README for details and usage
+examples.
+
+Attributes
+----------
+GalaxyFit : class
+    GalaxyFit is the class that prepares and executes MCMC runs, and stores
+    resulting chains.
 """
 from .fit import GalaxyFit
 

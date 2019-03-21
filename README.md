@@ -10,14 +10,21 @@ This code was used to generate the results in Naik et al. (2019).
 
 ## Authors
 
-This code was written by **Aneesh Naik** ([Bitbucket](https://bitbucket.org/an485/)). The research was performed in collaboration with the co-authors of Naik et al. (2019):
+This code was written by **Aneesh Naik** ([Bitbucket](https://bitbucket.org/an485/), [website](https://www.ast.cam.ac.uk/~an485/)). The research was performed in collaboration with the co-authors of Naik et al. (2019):
 
-* Ewald Puchwein ([website](https://www.aip.de/Members/epuchwein))
-* Anne-Christine Davis
-* Debora Sijacki
-* Harry Desmond
+* [Ewald Puchwein](https://www.aip.de/Members/epuchwein)
+* [Anne-Christine Davis](http://www.damtp.cam.ac.uk/user/acd/)
+* [Debora Sijacki](https://www.ast.cam.ac.uk/people/Debora.Sijacki)
+* [Harry Desmond](https://www2.physics.ox.ac.uk/contacts/people/desmond)
+
 
 ## License
 
-## Acknowledgments
+Copyright (2019) Aneesh Naik and co-authors.
 
+SPAM is free software made available under the MIT license. For details see LICENSE.
+
+If you make use of SPAM in your work, please cite our paper ([arXiv](), [ADS]()).
+
+
+## Acknowledgments

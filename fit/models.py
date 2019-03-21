@@ -7,11 +7,10 @@ Description: Mass models used in sparc fitting, particularly to feed into the
 2D solver, but also the dark matter profile used to calculate Newtonian
 contribution.
 """
-import MG_solvers as MG
 import numpy as np
 from scipy.special import hyp2f1
-from scipy.constants import G
-from scipy.constants import parsec as pc
+from scipy.constants import G, parsec as pc
+from .solvers import grid_1D, grid_2D
 kpc = 1e+3*pc
 delta = 93.6
 h = 0.7
@@ -38,23 +37,23 @@ def gas_disc(galaxy, grid):
     sigma_0 = 2*galaxy.HI_mass/(3*np.pi*R_d**2)  # kg/m^2
     height = 0.1*R_d  # metres
 
-    temp_grid = MG.grid_2D(ngrid=grid.ngrid, rmin=grid.rmin, rmax=grid.rmax)
+    temp_grid = grid_2D(ngrid=grid.ngrid, rmin=grid.rmin, rmax=grid.rmax)
     radgrid = temp_grid.rgrid*np.sin(temp_grid.thgrid)
     zgrid = temp_grid.rgrid*np.cos(temp_grid.thgrid)
 
     rho_0 = sigma_0/(2*height)  # kg/m^3
     rho = rho_0*np.exp(-radgrid/R_d)*np.exp(-np.abs(zgrid)/height)
 
-    if type(grid) == MG.grid_1D:
+    if type(grid) == grid_1D:
         rho = np.sum(rho*temp_grid.dvol, axis=-1)/grid.dvol
 
     assert rho.shape == grid.grid_shape
     return rho
 
 
-def stellar_disc(theta, theta_dict, galaxy, ML_ratio, grid):
+def stellar_disc(theta, theta_dict, galaxy, upsilon, grid):
 
-    if ML_ratio == 'fixed':
+    if upsilon == 'fixed':
         ML_disc = 0.5
     else:
         ML_disc = 10**theta[theta_dict['ML_disc']]
@@ -64,27 +63,27 @@ def stellar_disc(theta, theta_dict, galaxy, ML_ratio, grid):
 
     height = 0.196 * (R_d/kpc)**0.633 * kpc  # metres
 
-    temp_grid = MG.grid_2D(ngrid=grid.ngrid, rmin=grid.rmin, rmax=grid.rmax)
+    temp_grid = grid_2D(ngrid=grid.ngrid, rmin=grid.rmin, rmax=grid.rmax)
     radgrid = temp_grid.rgrid*np.sin(temp_grid.thgrid)
     zgrid = temp_grid.rgrid*np.cos(temp_grid.thgrid)
 
     rho_0 = sigma_0/(2*height)  # kg/m^3
     rho = rho_0*np.exp(-radgrid/R_d)*np.exp(-np.abs(zgrid)/height)
 
-    if type(grid) == MG.grid_1D:
+    if type(grid) == grid_1D:
         rho = np.sum(rho*temp_grid.dvol, axis=-1)/grid.dvol
 
     assert rho.shape == grid.grid_shape
     return rho
 
 
-def stellar_bulge(theta, theta_dict, galaxy,  ML_ratio, grid):
+def stellar_bulge(theta, theta_dict, galaxy, upsilon, grid):
 
     if not galaxy.StellarBulge:
         rho = np.zeros(grid.grid_shape, dtype=np.float64)
         return rho
 
-    if ML_ratio == 'fixed':
+    if upsilon == 'fixed':
         ML_bulge = 0.7
     else:
         ML_bulge = 10**theta[theta_dict['ML_bulge']]
@@ -98,17 +97,17 @@ def stellar_bulge(theta, theta_dict, galaxy,  ML_ratio, grid):
     return rho
 
 
-def DM_halo(theta, theta_dict, galaxy, halo_type, ML_ratio, grid):
+def DM_halo(theta, theta_dict, galaxy, halo_type, upsilon, grid):
 
     rho_0, R_s = halo_parameters(theta, theta_dict, galaxy,
-                                 halo_type, ML_ratio)
+                                 halo_type, upsilon)
 
     if halo_type == 'NFW':
         r = grid.rgrid/R_s
         rho = rho_0/(r*(1+r)**2)  # kg/m^3
     elif halo_type == 'DC14':
         r = grid.rgrid/R_s
-        X = stellar_mass_frac(theta, theta_dict, galaxy, ML_ratio)
+        X = stellar_mass_frac(theta, theta_dict, galaxy, upsilon)
         alpha, beta, gamma = DC14_pars(X=X)
         rho = rho_0/((r**gamma)*((1+r**alpha)**((beta-gamma)/alpha)))
 
@@ -116,7 +115,7 @@ def DM_halo(theta, theta_dict, galaxy, halo_type, ML_ratio, grid):
     return rho
 
 
-def halo_parameters(theta, theta_dict, galaxy, halo_type, ML_ratio):
+def halo_parameters(theta, theta_dict, galaxy, halo_type, upsilon):
 
     assert halo_type in ['NFW', 'DC14']
 
@@ -129,7 +128,7 @@ def halo_parameters(theta, theta_dict, galaxy, halo_type, ML_ratio):
     if halo_type == 'NFW':
         alpha, beta, gamma = 1, 3, 1
     elif halo_type == 'DC14':
-        X = stellar_mass_frac(theta, theta_dict, galaxy, ML_ratio)
+        X = stellar_mass_frac(theta, theta_dict, galaxy, upsilon)
         alpha, beta, gamma = DC14_pars(X)
 
     R_s = R_vir/(c_vir*((2-gamma)/(beta-2))**(1/alpha))
@@ -144,9 +143,9 @@ def halo_parameters(theta, theta_dict, galaxy, halo_type, ML_ratio):
     return rho_0, R_s
 
 
-def stellar_mass_frac(theta, theta_dict, galaxy, ML_ratio):
+def stellar_mass_frac(theta, theta_dict, galaxy, upsilon):
 
-    if ML_ratio == 'fixed':
+    if upsilon == 'fixed':
         ML = 0.5
     else:
         ML = 10**theta[theta_dict['ML_disc']]
@@ -160,17 +159,17 @@ def stellar_mass_frac(theta, theta_dict, galaxy, ML_ratio):
     return X
 
 
-def halo_v_circ(R, theta, theta_dict, galaxy, halo_type, ML_ratio):
+def halo_v_circ(R, theta, theta_dict, galaxy, halo_type, upsilon):
 
     assert halo_type in ['NFW', 'DC14']
     rho_0, R_s = halo_parameters(theta, theta_dict, galaxy,
-                                 halo_type, ML_ratio)
+                                 halo_type, upsilon)
 
     if halo_type == 'NFW':
         M_s = 4*np.pi*rho_0*R_s**3
         M_enc = M_s*(np.log((R_s+R)/R_s) - (R/(R_s+R)))
     elif halo_type == 'DC14':
-        X = stellar_mass_frac(theta, theta_dict, galaxy, ML_ratio)
+        X = stellar_mass_frac(theta, theta_dict, galaxy, upsilon)
         alpha, beta, gamma = DC14_pars(X)
         M_enc = 4*np.pi*rho_0*R*hypergeom_A1(R, R_s, alpha, beta, gamma)
 

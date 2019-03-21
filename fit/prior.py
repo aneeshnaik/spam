@@ -59,14 +59,16 @@ def CMR(M_halo):
 
 
 # log prior; flat in logspace, bounds from Katz et al
-def lnprior(theta, theta_dict, lb, ub, galaxy, halo_type, ML_ratio,
-            CosmicBaryonBound, scaling_priors):
+def lnprior(theta, theta_dict, galaxy, **kwargs):
 
-    assert theta.shape == lb.shape == ub.shape
+    lb = kwargs['prior_bounds_lower']
+    ub = kwargs['prior_bounds_upper']
+    if not theta.shape == lb.shape == ub.shape:
+        raise ValueError("Theta does not have same shape as theta bounds")
 
     if (theta < ub).all() and (theta > lb).all():
 
-        if ML_ratio == 'fixed':
+        if kwargs['upsilon'] == 'fixed':
             ML = 0.5
         else:
             ML = 10**theta[theta_dict['ML_disc']]
@@ -78,19 +80,19 @@ def lnprior(theta, theta_dict, lb, ub, galaxy, halo_type, ML_ratio,
         M_star = ML*1e+9*galaxy.luminosity_tot*Msun
 
         # reject if M_baryon/M_DM > 0.2, if CosmicBaryonBound flag is set
-        if CosmicBaryonBound:
+        if kwargs['baryon_bound']:
             M_gas = (4/3)*galaxy.HI_mass
             if (M_star+M_gas)/M_halo > 0.2:
                 return -1e+20
 
-        if scaling_priors:
+        if kwargs['scaling_priors']:
             y = np.log10(M_star)
             mu = np.log10(SHM(M_halo))
             sig = err_SHM(M_halo)/(SHM(M_halo)*np.log(10))
             sig += 0.2  # f(R) broadening
             g1 = ((y-mu)/sig)**2
 
-            if halo_type == 'DC14':  # convert DC14 c_vir to NFW c_vir
+            if kwargs['halo_type'] == 'DC14':  # convert DC14 c_vir to NFW
                 X = np.log10(M_star/M_halo)
                 exponent = 3.4*(X+4.5)
                 c_NFW = c_vir/(1+1e-5*np.exp(exponent))  # Katz typo corrected

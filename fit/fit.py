@@ -1,9 +1,10 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 """
-Created: 21st March 2019
+Created: 2018
 Author: A. P. Naik
-Description: Fit file
+Description: File containing 'GalaxyFit' class; main object in spam.fit
+submodule.
 """
 import sys
 import time
@@ -13,7 +14,7 @@ from scipy.constants import G, parsec as pc
 from .prior import lnprior
 from .likelihood import lnlike
 
-# physical constants
+# physical constants and cosmology; all SI units
 delta = 93.6
 h = 0.7
 H0 = h*100*1000/(1e+6*pc)
@@ -91,6 +92,12 @@ class GalaxyFit:
         used, for example, in the stored Markov chains.
     time_taken : float
         Time elapsed so far on MCMC.
+    chain : numpy.ndarray, shape (ntemps, nwalkers, niter, ndim)
+        MCMC chain. Created by GalaxyFit.iterate.
+    flatchain : numpy.ndarray, shape (ntemps, nwalkers*niter, ndim)
+        Flattened MCMC chain. Created by GalaxyFit.iterate.
+    lnprob : numpy.ndarray, shape (ntemps, nwalkers, niter)
+        Posterior (log-)probability values at each point in chain.
 
     Methods
     -------
@@ -120,10 +127,10 @@ class GalaxyFit:
         self.read_kwargs(kwargs)
 
         # assign number of free parameters ndim, as well as lower and upper
-        # bounds on priors lb and ub. Start with 2 NFW, then add 0, 1, or 2
-        # parameter(s) for M/L ratio, then 0 or 1 parameter for fR0, finally
-        # sigma_g
-        # Prior bounds are same as Katz et al except fR0 and sigma_g
+        # bounds on priors lb and ub, and theta_dict.
+        # Start with 2 NFW, then add 0, 1, or 2 parameter(s) for M/L ratio,
+        # then 0 or 1 parameter for fR0, finally sigma_g.
+        # Prior bounds are same as Katz et al. except fR0 and sigma_g
         ndim = 2
         lb = np.array([4, 0])
         ub = np.array([5.7, 2])
@@ -288,8 +295,8 @@ class GalaxyFit:
         d = ub-lb
         p0 = lb + d*np.random.rand(self.ntemps, self.nwalkers, self.ndim)
 
-        # making sure all initial postions are not in region forbidden by
-        # cosmic baryon bound; shifting them if they are
+        # make sure all initial postions are not in region forbidden by
+        # cosmic baryon bound; shift them if they are
         if self.baryon_bound:
             for i in range(self.ntemps):
                 for j in range(self.nwalkers):
@@ -314,7 +321,7 @@ class GalaxyFit:
 
     def iterate(self, niter, threads=1, initial_run=True, print_progress=True):
         """
-        Run MCMC.
+        Run MCMC sampling.
 
         Parameters
         ----------
@@ -345,7 +352,7 @@ class GalaxyFit:
             kwargs['env_screening'] = self.env_screening
             kwargs['MG_grid_dim'] = self.MG_grid_dim
 
-        # initialise sampler
+        # initialise emcee sampler
         sampler = emcee.PTSampler(self.ntemps, self.nwalkers, self.ndim,
                                   lnlike, lnprior, threads=threads,
                                   loglargs=[self.theta_dict, self.galaxy],

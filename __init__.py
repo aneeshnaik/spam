@@ -1,13 +1,13 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 """
-Created: 20th March 2019
+Created: 2018
 Author: A. P. Naik
 Description: 'spam' package, designed to search for observable imprints of
 Hu-Sawicki f(R) gravity in the rotation curves of the SPARC sample. All
 functionality is contained within the 'data', 'fit', and 'analysis' submodules.
 
-See README for details and usage examples.
+See submodule documentation and README for details and usage examples.
 
 SPAM is free software made available under the MIT license. For details see
 LICENSE.

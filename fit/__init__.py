@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 """
-Created: 20th March 2019
+Created: 2018
 Author: A. P. Naik
 Description: 'fit' submodule of spam package. See README for details and usage
 examples.

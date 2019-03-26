@@ -1,12 +1,13 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 """
-Created: 29th August 2018
+Created: 2018
 Author: A. P. Naik
-Description: Code to fit Hernquist profile to v_bulge
+Description: Code to fit Hernquist profile to v_bulge; store Hernquist
+parameters for all galaxies to SPARCData/hernquist_parameters.txt
 """
+import spam.data
 import numpy as np
-from sparc_data import SPARCGlobal
 from scipy.constants import G
 from scipy.optimize import curve_fit
 from scipy.constants import parsec as pc
@@ -27,24 +28,23 @@ def v_hernquist(r, log10rho, a):
     return v_circ
 
 
-# load sparc data
-sparc = SPARCGlobal()
+# store hernquist parameters in text file
+fitfile = open("SPARCData/hernquist_parameters.txt", 'w')
 
-file = open("SPARCData/hernquist_parameters.txt", 'w')
-#file = open("SPARCData/test_parameters.txt", 'w')
+# loop over galaxies
+for name in spam.data.names_full:
 
-# fit all galaxies
-for gal in sparc.galaxies:
+    gal = spam.data.SPARCGalaxy(name)
 
-    # check galaxy has bulge-disc decomposition; if no then skip
+    # check galaxy has bulge-disc decomaposition; if no then empty line
     if not gal.StellarBulge:
-        file.write(gal.name+'\n')
+        fitfile.write(gal.name+'\n')
         continue
 
     # fit v_bulge to hernquist profile
     bounds = ([-21, 0], [-14, 50*kpc])
     popt, pcov = curve_fit(v_hernquist, gal.R*kpc, gal.v_bul, maxfev=2000,
                            p0=(-20.0, 10*kpc), bounds=bounds)
-    file.write(gal.name+'\t'+str(10**popt[0])+'\t'+str(popt[1])+'\n')
+    fitfile.write(gal.name+'\t'+str(10**popt[0])+'\t'+str(popt[1])+'\n')
 
-file.close()
+fitfile.close()

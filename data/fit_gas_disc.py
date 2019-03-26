@@ -1,16 +1,16 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 """
-Created: 22nd August 2018
+Created: 2018
 Author: A. P. Naik
-Description: Code to fit exponential disc models to SPARC galaxies, and create
-a file containing best fit disc radii for each galaxy.
+Description: Code to fit exponential disc models to SPARC galaxy gas profiles,
+and create a file containing best fit disc radii for each galaxy.
 """
+import spam
 import numpy as np
 from scipy.constants import G
 from scipy.constants import parsec as pc
 from scipy.special import i0, i1, k0, k1
-from sparc_data import SPARCGlobal
 from scipy.optimize import curve_fit
 kpc = 1e+3*pc
 
@@ -44,20 +44,21 @@ class GalaxyDiscFit:
         return v_sq
 
 
-sparc = SPARCGlobal()
+# text file in which to store gas disc radii
+fitfile = open('SPARCData/gas_radii.txt', 'w')
 
-filename = "Sparc_Data/gas_radii.txt"
-file = open(filename, 'w')
+# loop over galaxies
+for name in spam.data.names_full:
 
-for gal_name in sparc.names:
-    galaxy = sparc.galaxies[sparc.names.index(gal_name)]
+    galaxy = spam.data.SPARCGalaxy(name)
 
+    # create data structure
     fitclass = GalaxyDiscFit(galaxy=galaxy)
 
+    # fit
     bounds = ([0.1*fitclass.R_d], [5*fitclass.R_d])
     popt, pcov = curve_fit(fitclass.v_circ_sq, fitclass.R, fitclass.v_gas**2,
                            p0=2*fitclass.R_d, bounds=bounds)
+    fitfile.write(name+'\t'+str(popt[0])+'\n')
 
-    file.write(gal_name+'\t'+str(popt[0])+'\n')
-
-file.close()
+fitfile.close()

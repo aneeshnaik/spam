@@ -1,10 +1,16 @@
 # SPAM
 
-SPAM is a python-3 package to search for imprints of Hu-Sawicki f(R) gravity on the rotation curves of the SPARC sample.
+SPAM is a python-3 package to search for imprints of Hu-Sawicki f(R) gravity on the rotation curves of the [SPARC](http://astroweb.cwru.edu/SPARC/) sample, using the MCMC sampler [emcee](http://dfm.io/emcee/current/).
 
 This code was used to generate the results in Naik et al. (2019).
 
 ## Prerequisites
+
+This code was written and implemented with python (version 3.6.8), and requires the following external packages (the version numbers in parentheses indicate the versions employed at time of writing, not particular dependencies):
+
+* emcee (2.2.1)
+* numpy (1.16.1)
+* scipy (1.2.0)
 
 ## Usage
 

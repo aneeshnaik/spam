@@ -68,4 +68,3 @@ class SPARCFitSummary(SPARCGlobal):
             galaxy.BIC = BIC(fit)
 
         return
-

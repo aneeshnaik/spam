@@ -17,5 +17,6 @@ If you make use of SPAM in your work, please cite our paper, Naik et al. (2019)
 from . import data
 from . import fit
 from . import analysis
+from . import plot
 
-__all__ = ["data", "fit", "analysis"]
+__all__ = ["data", "fit", "analysis", "plot"]

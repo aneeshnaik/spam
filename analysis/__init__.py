@@ -1,9 +1,10 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 """
-Created: 20th March 2019
+Created: 2018
 Author: A. P. Naik
-Description: init file of 'analysis' submodule.
+Description: 'analysis' submodule of spam package. See README for details and
+usage examples.
 """
 import os as _os
 import pickle as _pickle
@@ -13,7 +14,19 @@ import numpy as _np
 
 
 def open_summary(model, fitdir=_os.environ['SPAMFITDIR']):
+    """
+    Load pickled spam.analysis.FitSummary object.
 
+    Parameters
+    ----------
+    model : str, {'A'-'G', 'H0'-'H19', 'I0'-'I19'}
+        Which 'model' the fits being summarised belong to. See Table 1 in Naik
+        et al., 2019 for details about the models.
+    fitdir : str
+        Path to directory containing 'summaries' directory, containing the
+        relevant summary file. If user sets this as an environment variable,
+        then this is used by default, otherwise it must be user specified.
+    """
     summfile = open(fitdir+'summaries/MODEL_'+model+'_summary.obj', "rb")
     summ = _pickle.load(summfile)
     summfile.close()
@@ -22,6 +35,21 @@ def open_summary(model, fitdir=_os.environ['SPAMFITDIR']):
 
 
 def open_fit(model, name, fitdir=_os.environ['SPAMFITDIR']):
+    """
+    Load pickled spam.fit.GalaxyFit object.
+
+    Parameters
+    ----------
+    model : str, {'A'-'G', 'H0'-'H19', 'I0'-'I19'}
+        Which 'model' the fits being summarised belong to. See Table 1 in Naik
+        et al., 2019 for details about the models.
+    name : str
+        Name of galaxy.
+    fitdir : str
+        Path to directory containing 'summaries' directory, containing the
+        relevant summary file. If user sets this as an environment variable,
+        then this is used by default, otherwise it must be user specified.
+    """
 
     if model == '2D':
         fitfile = open(fitdir+'2D_TEST/'+name+'.obj', 'rb')
@@ -39,17 +67,64 @@ def _lnL(data, model, err):
 
 
 def _BIC(n, k, lnL):
-    """
-    BIC = ln(n)k - 2 lnL
-    """
     BIC = _np.log(n)*k - 2*lnL
     return BIC
 
 
 class FitSummary():
+    """
+    Object containing summary data for ensemble of MCMC samples across SPARC
+    galaxies.
+
+    Parameters
+    ----------
+    model : str, {'A'-'G', 'H0'-'H19', 'I0'-'I19'}
+        Which 'model' the fits being summarised belong to. See Table 1 in Naik
+        et al., 2019 for details about the models.
+    sample : str, {'standard', 'full'}
+        Whether the sample of fits is the 85-strong 'standard' sample analysed
+        in Naik et al., 2019, or the 147-strong 'full' sample, which includes
+        the galaxies eliminated by the environmental screening cut described
+        in that paper.
+    fitdir : str
+        Path to directory containing 'summaries' directory, containing the
+        relevant summary file. If user sets this as an environment variable
+        under the name SPAMFITDIR, then this is used by default, otherwise it
+        must be user specified.
+
+    Attributes
+    ----------
+    galaxies : dict
+        Each key is the name of a SPARC galaxy, while each value is an instance
+        of the class spam.data.SPARCGalaxy with a few extra attributes,
+        described below.
+    galaxies['name'].maxprob_theta : 1D np.ndarray
+        For named galaxy, maximum probability parameter values.
+    galaxies['name'].maxprob_v_circ : 1D np.ndarray
+        Best fit rotation curve model for named galaxy.
+    galaxies['name'].maxprob_v_gas : 1D np.ndarray
+        Gas contribution to best fit model.
+    galaxies['name'].maxprob_v_disc : 1D np.ndarray
+        Disc contribution to best fit model.
+    galaxies['name'].maxprob_v_bulge : 1D np.ndarray
+        Bulge contribution to best fit model.
+    galaxies['name'].maxprob_v_DM : 1D np.ndarray
+        DM contribution to best fit model.
+    galaxies['name'].maxprob_v_5 : 1D np.ndarray
+        Fifth force contribution to best fit model.
+    galaxies['name'].maxprob_v_err : 1D np.ndarray
+        If inferring errors, then total errors.
+    galaxies['name'].lnL : float
+        Log-likelihood of best fit model
+    galaxies['name'].BIC : float
+        Bayesian information criterion of best fit model
+    """
     def __init__(self, model, sample='standard',
                  fitdir=_os.environ['SPAMFITDIR']):
-
+        """
+        Initialise an instance of FitSummary class. See class dosctring for
+        more info.
+        """
         self.model = model
         self.sample = sample
         if sample == 'standard':

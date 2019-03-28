@@ -63,7 +63,7 @@ The scripts used to generate all of the figures in the paper can be found in the
 
 ## Authors
 
-This code was written by **Aneesh Naik** ([Bitbucket](https://bitbucket.org/an485/), [website](https://www.ast.cam.ac.uk/~an485/)). The research was performed in collaboration with the co-authors of Naik et al. (2019):
+This code was written by **Aneesh Naik** ([website](https://www.ast.cam.ac.uk/~an485/)). The research was performed in collaboration with the co-authors of Naik et al. (2019):
 
 * [Ewald Puchwein](https://www.aip.de/Members/epuchwein)
 * [Anne-Christine Davis](http://www.damtp.cam.ac.uk/user/acd/)

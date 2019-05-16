@@ -9,7 +9,6 @@ usage examples.
 import os as _os
 import pickle as _pickle
 import spam as _spam
-import util as _util
 import numpy as _np
 
 
@@ -136,9 +135,6 @@ class FitSummary():
         print("Model "+model+": looping over galaxies...")
         self.galaxies = {}
         for name in names:
-
-            # progress bar
-            _util.print_progress(names.index(name), len(names))
 
             # load galaxy data and fit
             galaxy = _spam.data.SPARCGalaxy(name)

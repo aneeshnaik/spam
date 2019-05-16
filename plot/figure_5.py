@@ -11,7 +11,6 @@ import matplotlib.pyplot as plt
 from matplotlib.lines import Line2D
 import spam
 import numpy as np
-from util import print_progress
 rcParams['text.usetex'] = True
 rcParams['font.size'] = 8
 
@@ -43,7 +42,6 @@ def figure_5():
     argmaxes = np.zeros(85)
     print("Calculating histograms...")
     for i in range(85):
-        print_progress(i, 85)
         name = spam.data.names_standard[i]
         fit = spam.analysis.open_fit('B', name)
         chain = fit.chain[0, :, -5000:, -2].flatten()

@@ -63,7 +63,7 @@ def figure_A1():
                 ax0.set_ylabel("Frequency")
                 ax0.yaxis.set_label_coords(-0.05, 1)
             elif col == 2:
-                ax0.set_xlabel(r'$\bar{f}_{R0}$')
+                ax0.set_xlabel(r'$\log_{10}|\bar{f}_{R0}|$')
             elif col == 4:
                 ax0.text(1.05, 0.5, '2D', transform=ax0.transAxes, va='center')
                 ax1.text(1.05, 0.5, '1D', transform=ax1.transAxes, va='center')

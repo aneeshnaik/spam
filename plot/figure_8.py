@@ -94,7 +94,7 @@ def figure_8():
 
     plt.xlim(-9.05, -4.95)
     plt.ylim(-9.75)
-    plt.ylabel(r"$\log_{10}f_{R0}$")
+    plt.ylabel(r"$\log_{10}|\bar{f}_{R0}|$")
     plt.xlabel(r"$\log_{10}\Phi_\mathrm{ext}/c^2$")
 
     return fig

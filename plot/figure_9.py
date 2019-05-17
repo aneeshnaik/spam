@@ -63,7 +63,7 @@ def figure_9():
     plt.legend(frameon=False, handles=handles)
 
     # axis labels
-    plt.ylabel(r"$\log_{10}f_{R0}$")
+    plt.ylabel(r"$\log_{10}|\bar{f}_{R0}|$")
     plt.xlabel(r"$L\ [10^9 L_\odot]$")
 
     return fig

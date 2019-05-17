@@ -67,7 +67,7 @@ def figure_10():
     plt.legend(frameon=False, handles=handles)
 
     # axis labels
-    plt.ylabel(r"$\log_{10}f_{R0}$")
+    plt.ylabel(r"$\log_{10}|\bar{f}_{R0}|$")
     plt.xlabel("Galaxy")
 
     return fig

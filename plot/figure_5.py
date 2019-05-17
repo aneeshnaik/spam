@@ -140,7 +140,7 @@ def figure_5():
     ax1.set_xlim(ax2.get_xlim())
     ax1.tick_params(axis='x', labelbottom=False)
     ax2.set_xlabel(r"Galaxy \#")
-    ax1.set_ylabel(r"$\log_{10} f_{R0}$")
-    ax2.set_ylabel(r"$\log_{10} f_{R0}$")
+    ax1.set_ylabel(r"$\log_{10} |\bar{f}_{R0}|$")
+    ax2.set_ylabel(r"$\log_{10} |\bar{f}_{R0}|$")
 
     return fig

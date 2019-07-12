@@ -66,29 +66,29 @@ def figure_8():
     fig.add_axes([0.2, 0.2, 0.75, 0.75])
 
     plt.scatter(phi_B_inc, fR0_B_inc,
-                facecolors='none', edgecolors=green3, s=6)
+                facecolors='none', edgecolors=green5, s=6)
     plt.scatter(phi_C_inc, fR0_C_inc,
-                facecolors=green3, edgecolors=green3, s=6)
+                facecolors=green5, edgecolors=green5, s=6)
     plt.scatter(phi_B_exc, fR0_B_exc,
-                facecolors='none', edgecolors='grey', s=6)
+                facecolors='none', edgecolors='darkgrey', s=6)
     plt.scatter(phi_C_exc, fR0_C_exc,
-                facecolors='grey', edgecolors='grey', s=6)
+                facecolors='darkgrey', edgecolors='darkgrey', s=6)
 
     for i in range(85):
         plt.plot([phi_B_inc[i], phi_C_inc[i]], [fR0_B_inc[i], fR0_C_inc[i]],
-                 ls='dashed', c=green4, lw=0.5)
+                 ls='dashed', c=green5, lw=0.5)
     for i in range(62):
         plt.plot([phi_B_exc[i], phi_C_exc[i]], [fR0_B_exc[i], fR0_C_exc[i]],
-                 ls='dashed', c='grey', lw=0.5)
+                 ls='dashed', c='darkgrey', lw=0.5)
 
-    handles = [Line2D([0], [0], marker='.', lw=0, label='Env. Screening',
+    handles = [Line2D([0], [0], marker='.', lw=0, label='Env. screening',
                       mfc='k', mec='k', ms=10),
-               Line2D([0], [0], marker='.', lw=0, label='No Env. Screening',
+               Line2D([0], [0], marker='.', lw=0, label='No Env. screening',
                       mfc='none', mec='k', ms=10),
-               Line2D([0], [0], marker='.', lw=0, label='Included Galaxies',
-                      mfc=green3, mec=green3, ms=10),
-               Line2D([0], [0], marker='.', lw=0, label='Excluded Galaxies',
-                      mfc='grey', mec='grey', ms=10)]
+               Line2D([0], [0], marker='.', lw=0, label='Included galaxies',
+                      mfc=green5, mec=green5, ms=10),
+               Line2D([0], [0], marker='.', lw=0, label='Excluded galaxies',
+                      mfc='darkgrey', mec='darkgrey', ms=10)]
 
     plt.legend(handles=handles, frameon=False)
 

@@ -45,21 +45,21 @@ def figure_9():
 
     # plot scatters
     plt.xscale('log')
-    plt.scatter(L_star, fR0_B, facecolors='none', edgecolors=green3,
+    plt.scatter(L_star, fR0_B, facecolors='none', edgecolors=green5,
                 s=6, label="No stellar screening")
-    plt.scatter(L_star, fR0_D, facecolors=green3, edgecolors=green3,
+    plt.scatter(L_star, fR0_D, facecolors=green5, edgecolors=green5,
                 s=6, label="Stellar screening")
 
     # plot lines
     for i in range(85):
         plt.plot([L_star[i], L_star[i]], [fR0_B[i], fR0_D[i]],
-                 ls='dashed', c=green4, lw=0.5)
+                 ls='dashed', c=green5, lw=0.5)
 
     # legend
     handles = [Line2D([0], [0], marker='.', lw=0, label='Stellar Screening',
-                      mfc=green3, mec=green3, ms=10),
+                      mfc=green5, mec=green5, ms=10),
                Line2D([0], [0], marker='.', lw=0, label='No Stellar Screening',
-                      mfc='none', mec=green3, ms=10)]
+                      mfc='none', mec=green5, ms=10)]
     plt.legend(frameon=False, handles=handles)
 
     # axis labels

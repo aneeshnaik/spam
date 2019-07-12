@@ -126,7 +126,7 @@ def figure_5():
             lnL_array[i, j] = gal_H.lnL-gal_A.lnL
 
     # plot colormesh and colorbar
-    cmap = create_cmap([comp, 'white', green5])
+    cmap = create_cmap(['k', 'white', green5])
     lnL_array = lnL_array[np.argsort(argmaxes)].T
     mesh = ax2.pcolormesh(gal_edges, fR_edges, lnL_array,
                           vmin=-5, vmax=5, cmap=cmap)

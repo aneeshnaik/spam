@@ -47,8 +47,8 @@ def figure_10():
     fig.add_axes([0.2, 0.2, 0.75, 0.75])
 
     x = np.arange(85)
-    plt.scatter(x, fR0_B, facecolors=comp, edgecolors=comp, s=6)
-    plt.scatter(x, fR0_E, facecolors=green3, edgecolors=green3, s=6)
+    plt.scatter(x, fR0_B, facecolors='k', edgecolors='k', s=6)
+    plt.scatter(x, fR0_E, facecolors='darkgrey', edgecolors='darkgrey', s=6)
     plt.scatter(x, fR0_F, facecolors=green5, edgecolors=green5, s=6)
 
     for i in range(85):
@@ -59,9 +59,9 @@ def figure_10():
 
     # legend
     handles = [Line2D([0], [0], marker='.', lw=0, label=r"Single $\Upsilon$",
-                      mfc=comp, mec=comp, ms=10),
+                      mfc='k', mec='k', ms=10),
                Line2D([0], [0], marker='.', lw=0, label=r"Fixed $\Upsilon$",
-                      mfc=green3, mec=green3, ms=10),
+                      mfc='darkgrey', mec='darkgrey', ms=10),
                Line2D([0], [0], marker='.', lw=0, label=r"Double $\Upsilon$",
                       mfc=green5, mec=green5, ms=10)]
     plt.legend(frameon=False, handles=handles)

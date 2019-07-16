@@ -47,8 +47,8 @@ def figure_2():
 
     # plot RC fits and components
     ax.plot(gal.R, gal.maxprob_v_circ,
-            label=r'$v_{f(R)}$', c=green5)
-    ax.plot(gal.R, gal.maxprob_v_DM,
+            label=r'$v_{f(R)}$', c=green4)
+    ax.plot(gal.R, gal.maxprob_v_DM, dashes=[2,1,1,1,1,1],
             label=r'$v_\mathrm{DM}$', c='darkgrey')
     ax.plot(gal.R, gal.maxprob_v_gas,
             label=r'$v_\mathrm{gas}$', c='darkgrey', ls='-.')

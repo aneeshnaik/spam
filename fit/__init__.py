@@ -27,6 +27,12 @@ _H0 = _h*100*1000/(1e+6*_pc)
 _Msun = 1.989e+30
 
 
+def lnprobfn(theta, theta_dict, galaxy, **kwargs):
+    L = _lnlike(theta, theta_dict, galaxy, **kwargs)
+    P = _lnprior(theta, theta_dict, galaxy, **kwargs)
+    return L + P
+
+
 class GalaxyFit:
     """
     Class which prepares and executes MCMC fits of SPARC galaxies.
@@ -117,7 +123,7 @@ class GalaxyFit:
         Run the MCMC.
 
     """
-    def __init__(self, galaxy, nwalkers=30, ntemps=4, **kwargs):
+    def __init__(self, galaxy, nwalkers=30, **kwargs):
         """
         Initialise an instance of GalaxyFit class, see GalaxyFit docstring for
         more info.
@@ -127,7 +133,6 @@ class GalaxyFit:
         self.galaxy = galaxy
         self.name = galaxy.name
         self.nwalkers = nwalkers
-        self.ntemps = ntemps
 
         # read and store kwargs
         self.read_kwargs(kwargs)
@@ -299,29 +304,28 @@ class GalaxyFit:
 
         # initial positions, random within prior bounds
         d = ub-lb
-        p0 = lb + d*_np.random.rand(self.ntemps, self.nwalkers, self.ndim)
+        p0 = lb + d*_np.random.rand(self.nwalkers, self.ndim)
 
         # make sure all initial postions are not in region forbidden by
         # cosmic baryon bound; shift them if they are
         if self.baryon_bound:
-            for i in range(self.ntemps):
-                for j in range(self.nwalkers):
+            for j in range(self.nwalkers):
 
-                    bound_violated = True
-                    while bound_violated:
-                        theta = p0[i, j]
-                        if self.upsilon == 'fixed':
-                            ML = 0.5
-                        else:
-                            ML = 10**theta[self.theta_dict['ML_disc']]
-                        V_vir = 10**theta[self.theta_dict['V_vir']]
-                        M_halo = (V_vir**3)/(_np.sqrt(_delta/2)*_G*_H0)
-                        M_star = ML*1e+9*self.galaxy.luminosity_tot*_Msun
-                        M_gas = (4/3)*self.galaxy.HI_mass
-                        if (M_star+M_gas)/M_halo > 0.2:
-                            p0[i, j] = lb + d*_np.random.rand(self.ndim)
-                        else:
-                            bound_violated = False
+                bound_violated = True
+                while bound_violated:
+                    theta = p0[j]
+                    if self.upsilon == 'fixed':
+                        ML = 0.5
+                    else:
+                        ML = 10**theta[self.theta_dict['ML_disc']]
+                    V_vir = 10**theta[self.theta_dict['V_vir']]
+                    M_halo = (V_vir**3)/(_np.sqrt(_delta/2)*_G*_H0)
+                    M_star = ML*1e+9*self.galaxy.luminosity_tot*_Msun
+                    M_gas = (4/3)*self.galaxy.HI_mass
+                    if (M_star+M_gas)/M_halo > 0.2:
+                        p0[j] = lb + d*_np.random.rand(self.ndim)
+                    else:
+                        bound_violated = False
 
         return p0
 
@@ -359,11 +363,9 @@ class GalaxyFit:
             kwargs['MG_grid_dim'] = self.MG_grid_dim
 
         # initialise emcee sampler
-        sampler = _emcee.PTSampler(self.ntemps, self.nwalkers, self.ndim,
-                                   _lnlike, _lnprior, threads=threads,
-                                   loglargs=[self.theta_dict, self.galaxy],
-                                   logpargs=[self.theta_dict, self.galaxy],
-                                   loglkwargs=kwargs, logpkwargs=kwargs)
+        sampler = _emcee.EnsembleSampler(self.nwalkers, self.ndim,
+                                         lnprobfn, args=[self.theta_dict, self.galaxy],
+                                         kwargs=kwargs)
 
         # either initialise walker positions or continue existing chain
         if initial_run:
